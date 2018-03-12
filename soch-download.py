@@ -97,9 +97,10 @@ def error(text):
 
 @click.command()
 @click.option('--action', default='all', help=action_help)
-@click.option('--key', default='test', help='SOCH API key')
+@click.option('--key', default='test', help='SOCH API key.')
 @click.option('--institution', help='The institution abbreviation (Only applies if action=institution).')
-def start(action, key, institution):
+@click.option('--query', help='SOCH search query string (Only applies if action=institution).')
+def start(action, key, institution, query=False):
     click.secho('Validating arguments...', fg='yellow')
     try:
         auth = KSamsok(key)
@@ -118,6 +119,10 @@ def start(action, key, institution):
         if not institution:
             error('Institution action given without specified institution.')
         confirm('serviceOrganization=' + institution)
+    elif action == 'query':
+        if not query:
+            error('Query action given without specified query.')
+        confirm(query)
     elif action == 'all': confirm('*')
     elif action == 'geodata-exists': confirm('geoDataExists=j')
 
