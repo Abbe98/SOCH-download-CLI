@@ -1,10 +1,12 @@
 import re
+import sys
 import math
 import click
 import requests
 import background
 import glob
 import shutil
+import time
 
 from ksamsok import KSamsok
 
@@ -15,6 +17,8 @@ actions = [
     'query',
 ]
 action_help = ', '.join(actions)
+
+bar = None
 
 headers = {
     'User-Agent': 'SOCH Download CLI',
@@ -27,6 +31,7 @@ def build_query(query, hits, start):
 
 @background.task
 def fetch(url, start_record):
+    bar.update(0)
     filepath = 'data/' + str(start_record) + '.xml'
     # streaming and copying file object to save memory
     r = requests.get(url, headers=headers, timeout=None, stream=True)
@@ -35,14 +40,25 @@ def fetch(url, start_record):
         r.raw.decode_content = True
         shutil.copyfileobj(r.raw, f)
 
-    click.echo('one')
+    bar.update(1)
 
 def pre_fetch(query, n_requests):
-    count = 0
-    while n_requests > count:
-        start_record = count * 500
-        fetch(build_query(query, 500, start_record), start_record)
-        count += 1
+    global bar
+    with click.progressbar(length=n_requests, label='Downloading...') as bar:
+        # because the progress bar is updated from other threads
+        # we clear it here so it's not duplicated
+        sys.stdout.write('\x1b[2K\x1b[1A')
+
+        count = 0
+        while n_requests > count:
+            start_record = count * 500
+            fetch(build_query(query, 500, start_record), start_record)
+            count += 1
+
+        #TODO how bad is this for performance
+        while not bar.finished:
+            time.sleep(0.5)
+        click.secho('\nDone!', fg='green', nl=False)
 
 def confirm(query):
     click.secho('Fetching query data and calculating requirements...', fg='green')
@@ -64,7 +80,7 @@ def confirm(query):
     click.echo('Would you like to proceed with the download? y/n')
     c = click.getchar()
     if c == 'y':
-        click.echo('Preparing download')
+        click.secho('Preparing download...', fg='green')
         return pre_fetch(query, required_n_requests)
 
     exit()
