@@ -2,7 +2,9 @@ import re
 import math
 import click
 import requests
+import background
 import glob
+import shutil
 
 from ksamsok import KSamsok
 
@@ -23,16 +25,24 @@ api_key = 'test'
 def build_query(query, hits, start):
     return 'http://www.kulturarvsdata.se/ksamsok/api?x-api={3}&method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_key)
 
-def fetch(query, n_requests):
-    target_queries = list()
-    count = 0
-    while n_requests != len(target_queries):
-        click.echo(len(target_queries))
-        start_record = len(target_queries) * 500
-        url = build_query(query, 500, start_record)
-        target_queries.append(url)
+@background.task
+def fetch(url, start_record):
+    filepath = 'data/' + str(start_record) + '.xml'
+    # streaming and copying file object to save memory
+    r = requests.get(url, headers=headers, timeout=None, stream=True)
 
-    click.echo(target_queries)
+    with open(filepath, 'wb') as f:
+        r.raw.decode_content = True
+        shutil.copyfileobj(r.raw, f)
+
+    click.echo('one')
+
+def pre_fetch(query, n_requests):
+    count = 0
+    while n_requests > count:
+        start_record = count * 500
+        fetch(build_query(query, 500, start_record), start_record)
+        count += 1
 
 def confirm(query):
     click.secho('Fetching query data and calculating requirements...', fg='green')
@@ -54,7 +64,7 @@ def confirm(query):
     c = click.getchar()
     if c == 'y':
         click.echo('Preparing download')
-        return fetch(query, required_n_requests)
+        return pre_fetch(query, required_n_requests)
 
     exit()
 
