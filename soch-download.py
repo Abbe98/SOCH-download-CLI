@@ -55,7 +55,7 @@ def pre_fetch(query, n_requests):
             fetch(build_query(query, 500, start_record), start_record)
             count += 1
 
-        #TODO how bad is this for performance
+        # the sleep is used for performance reasons
         while not bar.finished:
             time.sleep(0.5)
         click.secho('\nDone!', fg='green', nl=False)
