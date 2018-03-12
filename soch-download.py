@@ -60,6 +60,7 @@ def confirm(query):
     required_n_requests = math.ceil(n_results / 500)
 
     click.echo('Found {0} results, they would be split over {1} requests/files'.format(n_results, required_n_requests))
+    click.echo('This program might use all the systems available CPUs({0})!'.format(background.n))
     click.echo('Would you like to proceed with the download? y/n')
     c = click.getchar()
     if c == 'y':
