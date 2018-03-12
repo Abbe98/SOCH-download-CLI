@@ -23,6 +23,17 @@ api_key = 'test'
 def build_query(query, hits, start):
     return 'http://www.kulturarvsdata.se/ksamsok/api?x-api={3}&method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_key)
 
+def fetch(query, n_requests):
+    target_queries = list()
+    count = 0
+    while n_requests != len(target_queries):
+        click.echo(len(target_queries))
+        start_record = len(target_queries) * 500
+        url = build_query(query, 500, start_record)
+        target_queries.append(url)
+
+    click.echo(target_queries)
+
 def confirm(query):
     click.secho('Fetching query data and calculating requirements...', fg='green')
 
@@ -42,7 +53,8 @@ def confirm(query):
     click.echo('Would you like to proceed with the download? y/n')
     c = click.getchar()
     if c == 'y':
-        return required_n_requests
+        click.echo('Preparing download')
+        return fetch(query, required_n_requests)
 
     exit()
 
@@ -55,18 +67,6 @@ def valid_http_status(status):
 def error(text):
     click.secho(text, err=True, fg='red')
     exit()
-
-def fetch_institution(institution):
-    n_files = confirm('serviceOrganization=' + institution)
-    click.echo(n_files)
-
-def fetch_all():
-    n_files = confirm('*')
-    click.echo(n_files)
-
-def fetch_geodata():
-    n_files = confirm('geoDataExists=j')
-    click.echo(n_files)
 
 @click.command()
 @click.option('--action', default='all', help=action_help)
@@ -90,9 +90,9 @@ def start(action, key, institution):
     if action == 'institution':
         if not institution:
             error('Institution action given without specified institution.')
-        fetch_institution(institution)
-    elif action == 'all': fetch_all()
-    elif action == 'geodata-exists': fetch_geodata()
+        confirm('serviceOrganization=' + institution)
+    elif action == 'all': confirm('*')
+    elif action == 'geodata-exists': confirm('geoDataExists=j')
 
 if __name__ == '__main__':
     start()
