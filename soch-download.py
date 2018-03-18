@@ -15,6 +15,7 @@ actions = [
     'all',
     'institution',
     'query',
+    'color-exists',
 ]
 action_help = ', '.join(actions)
 
@@ -125,6 +126,7 @@ def start(action, key, institution, query=False):
         confirm(query)
     elif action == 'all': confirm('*')
     elif action == 'geodata-exists': confirm('geoDataExists=j')
+    elif action == 'color-exists': confirm('itemColor=*')
 
 if __name__ == '__main__':
     start()
