@@ -86,6 +86,35 @@ def confirm(query):
 
     exit()
 
+def unpack_xml():
+    if not glob.glob('raw_data/*'):
+        error('The data directory is empty, nothing to unpack.')
+
+    if glob.glob('rdf_data/*'):
+        error('The RDF data directory is not empty')
+
+    for xml in glob.glob('raw_data/*.xml'):
+        save_rdf(xml)
+    
+    time.sleep(1)
+
+record_pattern = re.compile(r'<record>((.|\n)+?)<\/record>')
+
+def save_rdf(filepath):
+    contents = None
+    n = None
+    with open(filepath, 'r') as f:
+        n = re.search(r'(\d+)', filepath).group(1)
+        contents = f.read()
+
+    click.echo(record_pattern)
+    for i, find in enumerate(re.finditer(record_pattern, contents)):
+        rdf = find.group(1)
+        rdf = re.sub(r'<rel:score.+$', '', rdf)
+        rdf = '<?xml version="1.0" encoding="UTF-8"?>' + rdf
+        with open('rdf_data/' + n + '_' + str(i) + '.rdf', 'w', encoding='utf-8') as f:
+            f.write(rdf)
+
 def valid_http_status(status):
     if 200 <= status <= 399:
         return True
@@ -101,8 +130,13 @@ def error(text):
 @click.option('--key', default='test', help='SOCH API key.')
 @click.option('--institution', help='The institution abbreviation (Only applies if action=institution).')
 @click.option('--query', help='SOCH search query string (Only applies if action=query).')
-def start(action, key, institution, query=False):
+@click.option('--unpack', default=False, is_flag=True, help='Unpacks the XML downloads into RDF files.')
+def start(action, key, institution, query=False, unpack=False):
     click.secho('Validating arguments...', fg='yellow')
+
+    if unpack:
+        unpack_xml()
+
     try:
         auth = KSamsok(key)
         api_key=key
@@ -114,7 +148,7 @@ def start(action, key, institution, query=False):
 
     # note: using glob instead of os.listdir because it ignores dotfiles
     if glob.glob('raw_data/*'):
-        error('The data directory is not empty.')
+        error('The raw data directory is not empty.')
 
     if action == 'institution':
         if not institution:
