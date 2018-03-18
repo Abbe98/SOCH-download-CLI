@@ -32,14 +32,14 @@ pipenv run python soch-download.py --key={API-KEY} --action=query --query=thumbn
 Download records from an specific institution(using the institution abbreviation):
 
 ```bash
-pipenv run python soch-download.py --action=institution --institution=raa
+pipenv run python soch-download.py --action=institution --institution=raa --key={API-KEY}
 ```
 
 Download records using a predefined action/query:
 
 ```bash
-pipenv run python soch-download.py --action=all
-pipenv run python soch-download.py --action=geodata-exists
+pipenv run python soch-download.py --action=all --key={API-KEY}
+pipenv run python soch-download.py --action=geodata-exists --key={API-KEY}
 ```
 
 List all available parameters and actions:
