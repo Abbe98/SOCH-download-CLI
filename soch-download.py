@@ -32,7 +32,7 @@ def build_query(query, hits, start):
 @background.task
 def fetch(url, start_record):
     bar.update(0)
-    filepath = 'data/' + str(start_record) + '.xml'
+    filepath = 'raw_data/' + str(start_record) + '.xml'
     # streaming and copying file object to save memory
     r = requests.get(url, headers=headers, timeout=None, stream=True)
 
@@ -112,7 +112,7 @@ def start(action, key, institution, query=False):
         error('Unknown action.')
 
     # note: using glob instead of os.listdir because it ignores dotfiles
-    if glob.glob('data/*'):
+    if glob.glob('raw_data/*'):
         error('The data directory is not empty.')
 
     if action == 'institution':
