@@ -87,16 +87,20 @@ def confirm(query):
     exit()
 
 def unpack_xml():
+    click.secho('Starting unpacking...', fg='green')
     if not glob.glob('raw_data/*'):
         error('The data directory is empty, nothing to unpack.')
 
     if glob.glob('rdf_data/*'):
         error('The RDF data directory is not empty')
 
-    for xml in glob.glob('raw_data/*.xml'):
-        save_rdf(xml)
-    
+    with click.progressbar(glob.glob('raw_data/*.xml'), label='Unpacking') as bar:
+        for xml in bar:
+            save_rdf(xml)
+
     time.sleep(1)
+    click.secho('Done!', fg='green')
+    exit()
 
 record_pattern = re.compile(r'<record>((.|\n)+?)<\/record>')
 
@@ -107,7 +111,6 @@ def save_rdf(filepath):
         n = re.search(r'(\d+)', filepath).group(1)
         contents = f.read()
 
-    click.echo(record_pattern)
     for i, find in enumerate(re.finditer(record_pattern, contents)):
         rdf = find.group(1)
         rdf = re.sub(r'<rel:score.+$', '', rdf)
