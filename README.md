@@ -42,6 +42,16 @@ pipenv run python soch-download.py --action=all --key={API-KEY}
 pipenv run python soch-download.py --action=geodata-exists --key={API-KEY}
 ```
 
+**Unpacking**
+
+The download actions by default downloads large XML files containing up to 500 RDFs each, after such a download you can use the `unpack` argument to convert all those files into individual RDF files:
+
+```bash
+pipenv run python soch-download.py --unpack
+```
+
+**Misc**
+
 List all available parameters and actions:
 
 ```bash
