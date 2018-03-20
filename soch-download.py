@@ -141,6 +141,7 @@ def start(action, key, institution, query=False, unpack=False):
     if unpack:
         unpack_xml()
 
+    global api_key
     try:
         auth = KSamsok(key)
         api_key=key
