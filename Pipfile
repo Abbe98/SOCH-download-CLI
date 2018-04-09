@@ -9,6 +9,7 @@ verify_ssl = true
 click = "*"
 requests = "*"
 ksamsok = "*"
+pylint = "*"
 
 
 [requires]
