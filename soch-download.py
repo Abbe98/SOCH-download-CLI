@@ -4,6 +4,7 @@ import re
 import shutil
 import sys
 import time
+import os
 
 import click
 import requests
@@ -104,8 +105,30 @@ def unpack_xml():
     click.secho('Done!', fg='green')
     exit()
 
-record_pattern = re.compile(r'<record>((.|\n)+?)<\/record>')
+def clean_dirs():
+    click.secho('Starting cleaning...', fg='green')
 
+    if not glob.glob('raw_data/*'):
+        click.secho('The raw data directory is empty, nothing to clean.', fg='yellow')
+
+    with click.progressbar(glob.glob('raw_data/*.xml'), label='Cleaning raw data') as bar:
+        for xml in bar:
+            os.remove(xml)
+
+    time.sleep(1)
+
+    if not glob.glob('rdf_data/*'):
+        click.secho('The data RDF directory is empty, nothing to clean.', fg='yellow')
+
+    with click.progressbar(glob.glob('rdf_data/*.rdf'), label='Cleaning RDF data') as bar:
+        for rdf in bar:
+            os.remove(rdf)
+
+    time.sleep(1)
+    click.secho('Done!', fg='green')
+    exit()
+
+record_pattern = re.compile(r'<record>((.|\n)+?)<\/record>')
 def save_rdf(filepath):
     contents = None
     n = None
@@ -136,11 +159,15 @@ def error(text):
 @click.option('--institution', help='The institution abbreviation (Only applies if action=institution).')
 @click.option('--query', help='SOCH search query string (Only applies if action=query).')
 @click.option('--unpack', default=False, is_flag=True, help='Unpacks the XML downloads into RDF files.')
-def start(action, key, institution, query=False, unpack=False):
+@click.option('--clean', default=False, is_flag=True, help='Empties the raw_data and rdf_data directories')
+def start(action, key, institution, query=False, unpack=False, clean=False):
     click.secho('Validating arguments...', fg='yellow')
 
     if unpack:
         unpack_xml()
+
+    if clean:
+        clean_dirs()
 
     global api_key
     try:
