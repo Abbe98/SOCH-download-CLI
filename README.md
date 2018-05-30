@@ -50,6 +50,14 @@ The download actions by default downloads large XML files containing up to 500 R
 pipenv run python soch-download.py --unpack
 ```
 
+**Cleaning**
+
+You can delete all the files in both data directories with the `clean` argument.
+
+```bash
+pipenv run python soch-download.py --clean
+```
+
 **Misc**
 
 List all available parameters and actions:
