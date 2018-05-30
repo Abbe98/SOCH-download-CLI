@@ -58,6 +58,14 @@ You can delete all the files in both data directories with the `clean` argument.
 pipenv run python soch-download.py --clean
 ```
 
+**Backup**
+
+The `backup` argument will create a zip file out of the raw data.
+
+```bash
+pipenv run python soch-download.py --backup
+```
+
 **Misc**
 
 List all available parameters and actions:

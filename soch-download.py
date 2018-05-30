@@ -5,6 +5,7 @@ import shutil
 import sys
 import time
 import os
+import zipfile
 
 import click
 import requests
@@ -128,6 +129,18 @@ def clean_dirs():
     click.secho('Done!', fg='green')
     exit()
 
+def create_zip():
+    click.secho('Creating backup ZIP...', fg='green')
+
+    zipf = zipfile.ZipFile('backup.zip', 'w', zipfile.ZIP_DEFLATED)
+    for raw in glob.glob('raw_data/*.xml'):
+        zipf.write(raw)
+    zipf.close()
+
+    click.secho('Done!', fg='green')
+    exit()
+
+
 record_pattern = re.compile(r'<record>((.|\n)+?)<\/record>')
 def save_rdf(filepath):
     contents = None
@@ -159,8 +172,9 @@ def error(text):
 @click.option('--institution', help='The institution abbreviation (Only applies if action=institution).')
 @click.option('--query', help='SOCH search query string (Only applies if action=query).')
 @click.option('--unpack', default=False, is_flag=True, help='Unpacks the XML downloads into RDF files.')
-@click.option('--clean', default=False, is_flag=True, help='Empties the raw_data and rdf_data directories')
-def start(action, key, institution, query=False, unpack=False, clean=False):
+@click.option('--clean', default=False, is_flag=True, help='Empties the raw_data and rdf_data directories.')
+@click.option('--backup', default=False, is_flag=True, help='Creates a ZIP file from the raw_data directory.')
+def start(action, key, institution, query=False, unpack=False, clean=False, backup=False):
     click.secho('Validating arguments...', fg='yellow')
 
     if unpack:
@@ -168,6 +182,9 @@ def start(action, key, institution, query=False, unpack=False, clean=False):
 
     if clean:
         clean_dirs()
+
+    if backup:
+        create_zip()
 
     global api_key
     try:

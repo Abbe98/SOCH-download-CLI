@@ -149,3 +149,4 @@ venv.bak/
 *.xml
 *.rdf
 .vscode/*
+*.zip
