@@ -7,7 +7,7 @@ SOCH Download CLI lets you do **multithreaded** batch downloads of Swedish Open 
 ## Prerequirements
 
  - GIT
- - Python 3.6
+ - Python >=3.4
  - [pipenv](https://docs.pipenv.org/)
  - An API key (get one by sending a email to ksamsok@raa.se)
 
