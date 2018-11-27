@@ -203,7 +203,7 @@ def start(action, key, institution, query=False, unpack=False, clean=False, back
     if action == 'institution':
         if not institution:
             error('Institution action given without specified institution.')
-        confirm('serviceOrganization=' + institution)
+        confirm('serviceOrganization="' + institution + '"')
     elif action == 'query':
         if not query:
             error('Query action given without specified query.')
