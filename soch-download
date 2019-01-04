@@ -37,9 +37,9 @@ def build_query(query, hits, start):
     return 'http://www.kulturarvsdata.se/ksamsok/api?x-api={3}&method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_key)
 
 @background.task
-def fetch(url, start_record):
+def fetch(url, start_record, outdir):
     bar.update(0)
-    filepath = 'raw_data/' + str(start_record) + '.xml'
+    filepath = '{}{}.xml'.format(outdir, start_record)
     # streaming and copying file object to save memory
     r = requests.get(url, headers=headers, timeout=None, stream=True)
 
@@ -49,7 +49,7 @@ def fetch(url, start_record):
 
     bar.update(1)
 
-def pre_fetch(query, n_requests):
+def pre_fetch(query, n_requests, outdir):
     global bar
     with click.progressbar(length=n_requests, label='Downloading...') as bar:
         # because the progress bar is updated from other threads
@@ -59,7 +59,7 @@ def pre_fetch(query, n_requests):
         count = 0
         while n_requests > count:
             start_record = count * 500
-            fetch(build_query(query, 500, start_record), start_record)
+            fetch(build_query(query, 500, start_record), start_record, outdir)
             count += 1
 
         # the sleep is used for performance reasons
@@ -67,7 +67,7 @@ def pre_fetch(query, n_requests):
             time.sleep(0.5)
         click.secho('\nDone!', fg='green', nl=False)
 
-def confirm(query):
+def confirm(query, outdir):
     click.secho('Fetching query data and calculating requirements...', fg='green')
 
     target = build_query(query, 1, 0)
@@ -75,10 +75,10 @@ def confirm(query):
     n_results = int(re.search(r'<totalHits>(\d+?)<\/totalHits>', r.text).group(1))
 
     if not valid_http_status(r.status_code):
-        error('SOCH returned an error. \n' + target)
+        error('SOCH returned an error. \n{}'.format(target))
 
     if n_results == 0:
-        error('SOCH returned zero records. \n' + target)
+        error('SOCH returned zero records. \n{}'.format(target))
 
     required_n_requests = math.ceil(n_results / 500)
 
@@ -88,74 +88,37 @@ def confirm(query):
     c = click.getchar()
     if c == 'y':
         click.secho('Preparing download...', fg='green')
-        return pre_fetch(query, required_n_requests)
+        return pre_fetch(query, required_n_requests, outdir)
 
     exit()
 
-def unpack_xml():
+def unpack_xml(directory, outdir):
+    if not glob.glob('{}*.xml'.format(directory)):
+        error('No XML files to unpack in the given directory: {}'.format(directory))
+
     click.secho('Starting unpacking...', fg='green')
-    if not glob.glob('raw_data/*'):
-        error('The data directory is empty, nothing to unpack.')
 
-    if glob.glob('rdf_data/*'):
-        error('The RDF data directory is not empty')
-
-    with click.progressbar(glob.glob('raw_data/*.xml'), label='Unpacking') as bar:
+    with click.progressbar(glob.glob('{}*.xml'.format(directory)), label='Unpacking') as bar:
         for xml in bar:
-            save_rdf(xml)
+            save_rdf(xml, outdir)
 
     time.sleep(1)
     click.secho('Done!', fg='green')
     exit()
-
-def clean_dirs():
-    click.secho('Starting cleaning...', fg='green')
-
-    if not glob.glob('raw_data/*'):
-        click.secho('The raw data directory is empty, nothing to clean.', fg='yellow')
-
-    with click.progressbar(glob.glob('raw_data/*.xml'), label='Cleaning raw data') as bar:
-        for xml in bar:
-            os.remove(xml)
-
-    time.sleep(1)
-
-    if not glob.glob('rdf_data/*'):
-        click.secho('The data RDF directory is empty, nothing to clean.', fg='yellow')
-
-    with click.progressbar(glob.glob('rdf_data/*.rdf'), label='Cleaning RDF data') as bar:
-        for rdf in bar:
-            os.remove(rdf)
-
-    time.sleep(1)
-    click.secho('Done!', fg='green')
-    exit()
-
-def create_zip():
-    click.secho('Creating backup ZIP...', fg='green')
-
-    zipf = zipfile.ZipFile('backup.zip', 'w', zipfile.ZIP_DEFLATED)
-    for raw in glob.glob('raw_data/*.xml'):
-        zipf.write(raw)
-    zipf.close()
-
-    click.secho('Done!', fg='green')
-    exit()
-
 
 record_pattern = re.compile(r'<record>((.|\n)+?)<\/record>')
-def save_rdf(filepath):
+def save_rdf(inpath, outpath):
     contents = None
     n = None
-    with open(filepath, 'r') as f:
-        n = re.search(r'(\d+)', filepath).group(1)
+    with open(inpath, 'r') as f:
+        n = re.search(r'(\d+)', inpath).group(1)
         contents = f.read()
 
     for i, find in enumerate(re.finditer(record_pattern, contents)):
         rdf = find.group(1)
         rdf = re.sub(r'<rel:score.+$', '', rdf)
-        rdf = '<?xml version="1.0" encoding="UTF-8"?>' + rdf
-        with open('rdf_data/' + n + '_' + str(i) + '.rdf', 'w', encoding='utf-8') as f:
+        rdf = '<?xml version="1.0" encoding="UTF-8"?>{}'.format(rdf)
+        with open('{}{}_{}.rdf'.format(outpath, n, i), 'w', encoding='utf-8') as f:
             f.write(rdf)
 
 def valid_http_status(status):
@@ -168,25 +131,33 @@ def error(text):
     click.secho(text, err=True, fg='red')
     exit()
 
+def normalize_dir_path(path):
+    if not path.startswith('/'): path = '{}/{}'.format(os.getcwd(), path)
+    if not path.endswith('/'): path = '{}/'.format(path)
+
+    return path
+
 @click.command()
 @click.option('--action', default='all', help=action_help)
 @click.option('--key', default='test', help='SOCH API key.')
 @click.option('--institution', help='The institution abbreviation (Only applies if action=institution).')
 @click.option('--query', help='SOCH search query string (Only applies if action=query).')
-@click.option('--unpack', default=False, is_flag=True, help='Unpacks the XML downloads into RDF files.')
-@click.option('--clean', default=False, is_flag=True, help='Empties the raw_data and rdf_data directories.')
-@click.option('--backup', default=False, is_flag=True, help='Creates a ZIP file from the raw_data directory.')
-def start(action, key, institution, query=False, unpack=False, clean=False, backup=False):
+@click.option('--unpack', default=False, help='Directory of SOCH XML files to unpack.')
+@click.option('--outdir', default=False, help='The output directory.')
+def start(action, key, institution, query=False, unpack=False, outdir=False):
     click.secho('Validating arguments...', fg='yellow')
 
+    if not outdir:
+        error('Missing required output directory argument (--outdir).')
+
+    outdir = normalize_dir_path(outdir)
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
     if unpack:
-        unpack_xml()
-
-    if clean:
-        clean_dirs()
-
-    if backup:
-        create_zip()
+        unpack = normalize_dir_path(unpack)
+        unpack_xml(unpack, outdir)
 
     global api_key
     try:
@@ -198,22 +169,18 @@ def start(action, key, institution, query=False, unpack=False, clean=False, back
     if action not in actions:
         error('Unknown action.')
 
-    # note: using glob instead of os.listdir because it ignores dotfiles
-    if glob.glob('raw_data/*'):
-        error('The raw data directory is not empty.')
-
     if action == 'institution':
         if not institution:
             error('Institution action given without specified institution.')
-        confirm('serviceOrganization="' + institution + '"')
+        confirm('serviceOrganization="{}"'.format(institution), outdir)
     elif action == 'query':
         if not query:
             error('Query action given without specified query.')
-        confirm(query)
-    elif action == 'all': confirm('*')
-    elif action == 'geodata-exists': confirm('geoDataExists=j')
-    elif action == 'color-exists': confirm('itemColor=*')
-    elif action == 'keyword-exists': confirm('itemKeyWord=*')
+        confirm(query, outdir)
+    elif action == 'all': confirm('*', outdir)
+    elif action == 'geodata-exists': confirm('geoDataExists=j', outdir)
+    elif action == 'color-exists': confirm('itemColor=*', outdir)
+    elif action == 'keyword-exists': confirm('itemKeyWord=*', outdir)
 
 if __name__ == '__main__':
     start()
