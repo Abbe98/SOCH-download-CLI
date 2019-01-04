@@ -1,6 +1,6 @@
 # SOCH Download CLI
 
-![screenshot](screenshot.png)
+![screenshot](screenshot.gif)
 
 SOCH Download CLI lets you do **multithreaded** batch downloads of Swedish Open Cultural Heritage (K-Samsök) records for offline processing and analytics.
 
