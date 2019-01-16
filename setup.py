@@ -1,6 +1,12 @@
-from setuptools import setup
-version = '1.0.0'
-repo = 'SOCH Download CLI'
+from setuptools import setup, find_packages
+from os import path
+
+version = '1.0.1'
+repo = 'SOCH-Download-CLI'
+
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
   name = 'soch-download',
@@ -9,6 +15,8 @@ setup(
   python_requires='>=3.4.0',
   version = version,
   description = 'SOCH Download CLI lets you do multithreaded batch downloads of Swedish Open Cultural Heritage(K-Samsök) records for offline processing and analytics.',
+  long_description=long_description,
+  long_description_content_type='text/markdown',
   author = 'Albin Larsson',
   author_email = 'albin.larsson@raa.se',
   url = 'https://github.com/riksantikvarieambetet/' + repo,
