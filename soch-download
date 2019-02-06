@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+import concurrent.futures
 import glob
 import math
+import multiprocessing
 import os
 import re
 import shutil
@@ -13,7 +15,45 @@ import click
 import requests
 from ksamsok import KSamsok
 
-import background
+
+def default_n():
+    return multiprocessing.cpu_count()
+
+n = default_n()
+pool = concurrent.futures.ThreadPoolExecutor(max_workers=n)
+callbacks = []
+results = []
+
+
+def run(f, *args, **kwargs):
+
+    pool._max_workers = n
+    pool._adjust_thread_count()
+
+    f = pool.submit(f, *args, **kwargs)
+    results.append(f)
+
+    return f
+
+
+def task(f):
+    def do_task(*args, **kwargs):
+        result = run(f, *args, **kwargs)
+
+        for cb in callbacks:
+            result.add_done_callback(cb)
+
+        return result
+    return do_task
+
+
+def callback(f):
+    callbacks.append(f)
+
+    def register_callback():
+        f()
+
+    return register_callback
 
 actions = [
     'geodata-exists',
@@ -36,7 +76,7 @@ api_key = 'test'
 def build_query(query, hits, start):
     return 'http://www.kulturarvsdata.se/ksamsok/api?x-api={3}&method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_key)
 
-@background.task
+@task
 def fetch(url, start_record, outdir):
     bar.update(0)
     filepath = '{}{}.xml'.format(outdir, start_record)
@@ -72,10 +112,12 @@ def confirm(query, outdir):
 
     target = build_query(query, 1, 0)
     r = requests.get(target, headers=headers)
-    n_results = int(re.search(r'<totalHits>(\d+?)<\/totalHits>', r.text).group(1))
 
     if not valid_http_status(r.status_code):
         error('SOCH returned an error. \n{}'.format(target))
+        print(target)
+
+    n_results = int(re.search(r'<totalHits>(\d+?)<\/totalHits>', r.text).group(1))
 
     if n_results == 0:
         error('SOCH returned zero records. \n{}'.format(target))
@@ -83,7 +125,7 @@ def confirm(query, outdir):
     required_n_requests = math.ceil(n_results / 500)
 
     click.echo('Found {0} results, they would be split over {1} requests/files'.format(n_results, required_n_requests))
-    click.echo('This program might use all the systems available CPUs({0})!'.format(background.n))
+    click.echo('This program might use all the systems available CPUs({0})!'.format(n))
     click.echo('Would you like to proceed with the download? y/n')
     c = click.getchar()
     if c == 'y':
