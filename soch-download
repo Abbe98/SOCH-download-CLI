@@ -26,7 +26,6 @@ results = []
 
 
 def run(f, *args, **kwargs):
-
     pool._max_workers = n
     pool._adjust_thread_count()
 
@@ -72,9 +71,10 @@ headers = {
 }
 
 api_key = 'test'
+api_endpoint = 'http://www.kulturarvsdata.se/'
 
 def build_query(query, hits, start):
-    return 'http://www.kulturarvsdata.se/ksamsok/api?x-api={3}&method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_key)
+    return '{4}ksamsok/api?x-api={3}&method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_key, api_endpoint)
 
 @task
 def fetch(url, start_record, outdir):
@@ -182,11 +182,12 @@ def normalize_dir_path(path):
 @click.command()
 @click.option('--action', default='all', help=action_help)
 @click.option('--key', default='test', help='SOCH API key.')
+@click.option('--endpoint', default='http://www.kulturarvsdata.se/', help='SOCH API endpoint.')
 @click.option('--institution', help='The institution abbreviation (Only applies if action=institution).')
 @click.option('--query', help='SOCH search query string (Only applies if action=query).')
 @click.option('--unpack', default=False, help='Directory of SOCH XML files to unpack.')
 @click.option('--outdir', default=False, help='The output directory.')
-def start(action, key, institution, query=False, unpack=False, outdir=False):
+def start(action, key, endpoint, institution, query=False, unpack=False, outdir=False):
     click.secho('Validating arguments...', fg='yellow')
 
     if not outdir:
@@ -201,12 +202,15 @@ def start(action, key, institution, query=False, unpack=False, outdir=False):
         unpack = normalize_dir_path(unpack)
         unpack_xml(unpack, outdir)
 
+    global api_endpoint
     global api_key
+    api_endpoint = endpoint
+    auth = KSamsok(key, endpoint=api_endpoint)
     try:
-        auth = KSamsok(key)
+        auth = KSamsok(key, endpoint=api_endpoint)
         api_key=key
     except:
-        error('Bad API key.')
+        error('Bad API key or endpoint.')
 
     if action not in actions:
         error('Unknown action.')
