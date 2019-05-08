@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from os import path
 
-version = '1.0.2'
+version = '1.3.0'
 repo = 'SOCH-Download-CLI'
 
 this_directory = path.abspath(path.dirname(__file__))
