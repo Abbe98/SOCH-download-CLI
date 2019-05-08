@@ -58,3 +58,9 @@ Use your own SOCH API key:
 ```bash
 soch-download --action=query --query=itemKeyWord=hus --outdir=path/to/target/directory --key=your-api-key
 ```
+
+Target a custom SOCH API endpoint:
+
+```bash
+soch-download --action=query --query=itemKeyWord=hus --outdir=path/to/target/directory --endpoint=http://lx-ra-ksam2.raa.se:8080/
+```
