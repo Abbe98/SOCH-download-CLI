@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from os import path
 
-version = '1.3.0'
+version = '1.4.0'
 repo = 'SOCH-Download-CLI'
 
 this_directory = path.abspath(path.dirname(__file__))
@@ -10,7 +10,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
   name = 'soch-download',
-  install_requires=['requests', 'click', 'ksamsok'],
+  install_requires=['requests', 'click'],
   scripts=['soch-download'],
   python_requires='>=3.4.0',
   version = version,

@@ -53,12 +53,6 @@ List all available parameters and actions:
 soch-download --help
 ```
 
-Use your own SOCH API key:
-
-```bash
-soch-download --action=query --query=itemKeyWord=hus --outdir=path/to/target/directory --key=your-api-key
-```
-
 Target a custom SOCH API endpoint:
 
 ```bash
