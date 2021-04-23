@@ -71,7 +71,7 @@ headers = {
 }
 
 api_key = 'test'
-api_endpoint = 'http://www.kulturarvsdata.se/'
+api_endpoint = 'https://kulturarvsdata.se/'
 
 def build_query(query, hits, start):
     return '{4}ksamsok/api?x-api={3}&method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_key, api_endpoint)
@@ -182,7 +182,7 @@ def normalize_dir_path(path):
 @click.command()
 @click.option('--action', default='all', help=action_help)
 @click.option('--key', default='test', help='SOCH API key.')
-@click.option('--endpoint', default='http://www.kulturarvsdata.se/', help='SOCH API endpoint.')
+@click.option('--endpoint', default='https://kulturarvsdata.se/', help='SOCH API endpoint.')
 @click.option('--institution', help='The institution abbreviation (Only applies if action=institution).')
 @click.option('--query', help='SOCH search query string (Only applies if action=query).')
 @click.option('--unpack', default=False, help='Directory of SOCH XML files to unpack.')
