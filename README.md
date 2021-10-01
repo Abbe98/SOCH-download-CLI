@@ -2,7 +2,7 @@
 
 ![screenshot](screenshot.gif)
 
-SOCH Download CLI lets you do **multithreaded** batch downloads of Swedish Open Cultural Heritage (K-Samsök) records for offline processing and analytics.
+SOCH Download CLI lets you do **multithreaded** batch downloads of Swedish Open Cultural Heritage (K-samsök) records for offline processing and analytics.
 
 ## Prerequirements
 
@@ -51,12 +51,6 @@ List all available parameters and actions:
 
 ```bash
 soch-download --help
-```
-
-Use your own SOCH API key:
-
-```bash
-soch-download --action=query --query=itemKeyWord=hus --outdir=path/to/target/directory --key=your-api-key
 ```
 
 Target a custom SOCH API endpoint:
