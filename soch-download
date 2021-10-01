@@ -70,11 +70,10 @@ headers = {
     'User-Agent': 'SOCH Download CLI',
 }
 
-api_key = 'test'
 api_endpoint = 'https://kulturarvsdata.se/'
 
 def build_query(query, hits, start):
-    return '{4}ksamsok/api?x-api={3}&method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_key, api_endpoint)
+    return '{4}ksamsok/api?method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_endpoint)
 
 @task
 def fetch(url, start_record, outdir):
@@ -181,13 +180,12 @@ def normalize_dir_path(path):
 
 @click.command()
 @click.option('--action', default='all', help=action_help)
-@click.option('--key', default='test', help='SOCH API key.')
 @click.option('--endpoint', default='https://kulturarvsdata.se/', help='SOCH API endpoint.')
 @click.option('--institution', help='The institution abbreviation (Only applies if action=institution).')
 @click.option('--query', help='SOCH search query string (Only applies if action=query).')
 @click.option('--unpack', default=False, help='Directory of SOCH XML files to unpack.')
 @click.option('--outdir', default=False, help='The output directory.')
-def start(action, key, endpoint, institution, query=False, unpack=False, outdir=False):
+def start(action, endpoint, institution, query=False, unpack=False, outdir=False):
     click.secho('Validating arguments...', fg='yellow')
 
     if not outdir:
@@ -203,14 +201,12 @@ def start(action, key, endpoint, institution, query=False, unpack=False, outdir=
         unpack_xml(unpack, outdir)
 
     global api_endpoint
-    global api_key
     api_endpoint = endpoint
-    auth = KSamsok(key, endpoint=api_endpoint)
+    auth = KSamsok(endpoint=api_endpoint)
     try:
-        auth = KSamsok(key, endpoint=api_endpoint)
-        api_key=key
+        auth = KSamsok(endpoint=api_endpoint)
     except:
-        error('Bad API key or endpoint.')
+        error('Bad endpoint.')
 
     if action not in actions:
         error('Unknown action.')
