@@ -73,7 +73,7 @@ headers = {
 api_endpoint = 'https://kulturarvsdata.se/'
 
 def build_query(query, hits, start):
-    return '{4}ksamsok/api?method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_endpoint)
+    return '{3}ksamsok/api?method=search&query={0}&hitsPerPage={1}&startRecord={2}'.format(query, hits, start, api_endpoint)
 
 @task
 def fetch(url, start_record, outdir):
