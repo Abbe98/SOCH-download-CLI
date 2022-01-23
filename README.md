@@ -39,7 +39,7 @@ soch-download --action=geodata-exists --outdir=path/to/target/directory
 
 **Unpacking**
 
-The download actions by default downloads large XML files containing up to 500 RDFs each, after such a download you can use the `unpack` argument to convert all those files into individual RDF files:
+The download actions by default downloads large XML files containing up to 1000 RDFs each, after such a download you can use the `unpack` argument to convert all those files into individual RDF files:
 
 ```bash
 soch-download --unpack=path/to/xml/files --outdir=path/to/target/directory
