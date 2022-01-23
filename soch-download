@@ -97,8 +97,8 @@ def pre_fetch(query, n_requests, outdir):
 
         count = 0
         while n_requests > count:
-            start_record = count * 500
-            fetch(build_query(query, 500, start_record), start_record, outdir)
+            start_record = count * 1000
+            fetch(build_query(query, 1000, start_record), start_record, outdir)
             count += 1
 
         # the sleep is used for performance reasons
@@ -121,7 +121,7 @@ def confirm(query, outdir):
     if n_results == 0:
         error('SOCH returned zero records. \n{}'.format(target))
 
-    required_n_requests = math.ceil(n_results / 500)
+    required_n_requests = math.ceil(n_results / 1000)
 
     click.echo('Found {0} results, they would be split over {1} requests/files'.format(n_results, required_n_requests))
     click.echo('This program might use all the systems available CPUs({0})!'.format(n))
